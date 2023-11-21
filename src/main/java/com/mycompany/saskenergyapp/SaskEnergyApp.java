@@ -1,8 +1,8 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  */
-
 package com.mycompany.saskenergyapp;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridLayout;
@@ -37,8 +37,6 @@ import javax.swing.table.TableColumn;
  *
  * @author amrut
  */
-
-
 public class SaskEnergyApp extends JFrame {
 
     private JTextField usernameField;
@@ -202,7 +200,7 @@ class UserDatabaseApp extends JFrame {
             Class.forName("com.mysql.cj.jdbc.Driver");
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/users", "root", "Abcd1234");
         } catch (Exception e) {
-            System.out.println("DB connection failed with error: "+ e.getMessage());
+            System.out.println("DB connection failed with error: " + e.getMessage());
         }
     }
 
@@ -219,28 +217,41 @@ class UserDatabaseApp extends JFrame {
                 tableModel.addRow(new Object[]{rs.getInt("ID"), rs.getString("FirstName"), rs.getString("LastName"), rs.getString("Email"), rs.getString("PhoneNumber"), "Update/Delete"});
             }
         } catch (SQLException e) {
-            System.out.println("Fetching user list from DB failed with error: "+ e.getMessage());
+            System.out.println("Fetching user list from DB failed with error: " + e.getMessage());
         }
     }
 
     private User showNewUserDialog() {
-        JTextField firstNameField = new JTextField();
-        JTextField lastNameField = new JTextField();
-        JTextField emailField = new JTextField();
-        JTextField phoneNumberField = new JTextField();
-        Object[] message = {
-            "First Name:", firstNameField,
-            "Last Name:", lastNameField,
-            "Email:", emailField,
-            "Phone Number:", phoneNumberField
-        };
+        User newUser = null;
+        while (newUser == null) {
+            JTextField firstNameField = new JTextField();
+            JTextField lastNameField = new JTextField();
+            JTextField emailField = new JTextField();
+            JTextField phoneNumberField = new JTextField();
+            Object[] message = {
+                "First Name:", firstNameField,
+                "Last Name:", lastNameField,
+                "Email:", emailField,
+                "Phone Number:", phoneNumberField
+            };
 
-        int option = JOptionPane.showConfirmDialog(null, message, "New User", JOptionPane.OK_CANCEL_OPTION);
-        if (option == JOptionPane.OK_OPTION) {
-            return new User(firstNameField.getText(), lastNameField.getText(), emailField.getText(), phoneNumberField.getText());
-        } else {
-            return null; // User clicked cancel or closed the dialog
+            int option = JOptionPane.showConfirmDialog(null, message, "New User", JOptionPane.OK_CANCEL_OPTION);
+            if (option == JOptionPane.OK_OPTION) {
+                String firstName = firstNameField.getText();
+                String lastName = lastNameField.getText();
+                String email = emailField.getText();
+                String phone = phoneNumberField.getText();
+
+                if ("".equals(firstName) || "".equals(lastName) || "".equals(email) || "".equals(phone)) {
+                    JOptionPane.showMessageDialog(null, "User data missing, enter complete user details!");
+                } else {
+                    newUser = new User(firstName, lastName, email, phone);
+                }
+            } else {
+                break; // User clicked cancel or closed the dialog
+            }
         }
+        return newUser;
     }
 
     private void addUserToDatabase(User user) {
@@ -253,7 +264,7 @@ class UserDatabaseApp extends JFrame {
             stmt.executeUpdate();
             JOptionPane.showMessageDialog(null, "New user Added successfully!");
         } catch (SQLException e) {
-            System.out.println("Adding new user failed with error: "+ e.getMessage());
+            System.out.println("Adding new user failed with error: " + e.getMessage());
         }
     }
 
@@ -411,4 +422,3 @@ class UserDatabaseApp extends JFrame {
         }
     }
 }
-

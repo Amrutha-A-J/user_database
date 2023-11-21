@@ -16,6 +16,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import javax.swing.BorderFactory;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -115,9 +116,9 @@ class User {
 
 class UserDatabaseApp extends JFrame {
 
+    JLabel searchLabel = new JLabel("Search by name/phone :");
     private JTextField searchField;
     private JTable userTable;
-    private JButton searchButton;
     private JCheckBox emailCheckBox;
     private JCheckBox phoneCheckBox;
     private Connection conn;
@@ -129,11 +130,13 @@ class UserDatabaseApp extends JFrame {
         this.setSize(600, 300);
         this.setLayout(new BorderLayout());
         JPanel topPanel = new JPanel();
+        topPanel.add(searchLabel);
         topPanel.add(searchField);
         topPanel.add(emailCheckBox);
         topPanel.add(phoneCheckBox);
-        topPanel.add(searchButton);
-        JButton newUserButton = new JButton("New User");
+        topPanel.setBorder(BorderFactory.createTitledBorder("Search"));
+        JPanel bottomPanel = new JPanel();
+        JButton newUserButton = new JButton("Add New User");
         newUserButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 User newUser = showNewUserDialog();
@@ -145,8 +148,9 @@ class UserDatabaseApp extends JFrame {
                 }
             }
         });
-        topPanel.add(newUserButton);
+        bottomPanel.add(newUserButton);
         this.add(topPanel, BorderLayout.NORTH);
+        this.add(bottomPanel, BorderLayout.SOUTH);
         this.add(new JScrollPane(userTable), BorderLayout.CENTER);
         connectToDatabase();
         displayUsers();
@@ -156,7 +160,6 @@ class UserDatabaseApp extends JFrame {
         searchField = new JTextField(10);
         emailCheckBox = new JCheckBox("Email", true);
         phoneCheckBox = new JCheckBox("Phone Number", true);
-        searchButton = new JButton("Search");
         String[] columnNames = {"ID", "First Name", "Last Name", "Email", "Phone Number", "Actions"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override

@@ -3,5 +3,4 @@
 
 # But not these files...
 !.gitignore
-!*.java
-
+!/SaskEnergyApp/src/main/java/com/mycompany/saskenergyapp/SaskEnergyApp.java

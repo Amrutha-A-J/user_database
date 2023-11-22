@@ -160,17 +160,19 @@ class UserDatabaseApp extends JFrame {
         searchField = new JTextField(10);
         emailCheckBox = new JCheckBox("Email", true);
         phoneCheckBox = new JCheckBox("Phone Number", true);
-        String[] columnNames = {"ID", "First Name", "Last Name", "Email", "Phone Number", "Actions"};
+        String[] columnNames = {"ID", "First Name", "Last Name", "Email", "Phone Number", "Update", "Delete"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 5; // make only the "Actions" column editable
+                return column == 5 || column == 6; // make only the "Update" and "Delete" columns editable
             }
         };
         userTable = new JTable(tableModel);
         userTable.removeColumn(userTable.getColumn("ID"));  // Hide the "ID" column
-        userTable.getColumn("Actions").setCellRenderer((TableCellRenderer) new ButtonRenderer());
-        userTable.getColumn("Actions").setCellEditor(new ButtonEditor(new JCheckBox(), this));
+        userTable.getColumn("Update").setCellRenderer((TableCellRenderer) new ButtonRenderer());
+        userTable.getColumn("Update").setCellEditor(new ButtonEditor(new JCheckBox(), this, "Update"));
+        userTable.getColumn("Delete").setCellRenderer((TableCellRenderer) new ButtonRenderer());
+        userTable.getColumn("Delete").setCellEditor(new ButtonEditor(new JCheckBox(), this, "Delete"));
 
         searchField.addKeyListener(new KeyAdapter() {
             @Override
@@ -217,7 +219,7 @@ class UserDatabaseApp extends JFrame {
             stmt.setString(3, "%" + search + "%");
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                tableModel.addRow(new Object[]{rs.getInt("ID"), rs.getString("FirstName"), rs.getString("LastName"), rs.getString("Email"), rs.getString("PhoneNumber"), "Update/Delete"});
+                tableModel.addRow(new Object[]{rs.getInt("ID"), rs.getString("FirstName"), rs.getString("LastName"), rs.getString("Email"), rs.getString("PhoneNumber"), "Update", "Delete"});
             }
         } catch (SQLException e) {
             System.out.println("Fetching user list from DB failed with error: " + e.getMessage());
@@ -293,20 +295,30 @@ class UserDatabaseApp extends JFrame {
         private JTable table;
         private UserDatabaseApp app;
 
-        public ButtonEditor(JCheckBox checkBox, UserDatabaseApp app) {
+        public ButtonEditor(JCheckBox checkBox, UserDatabaseApp app, String action) {
             super(checkBox);
             this.app = app;
             button = new JButton();
             button.setOpaque(true);
             button.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    if ("Update/Delete".equals(label)) {
+                    if ("Update".equals(action)) {
                         // Open a dialog to edit the row data
                         User user = getUserFromRow(row);
                         User updatedUser = showUpdateDialog(user);
                         if (updatedUser != null) {
                             // Update the user in the database
                             updateUserInDatabase(updatedUser);
+                            // Refresh the table
+                            app.displayUsers();
+                        }
+                    } else if ("Delete".equals(action)) {
+                        // Open a dialog to confirm and delete the row data
+                        User user = getUserFromRow(row);
+                        int option = showDeleteDialog(user);
+                        if (option == JOptionPane.YES_OPTION) {
+                            // Delete the user from the database
+                            deleteUserInDatabase(user);
                             // Refresh the table
                             app.displayUsers();
                         }
@@ -318,15 +330,8 @@ class UserDatabaseApp extends JFrame {
 
         public Component getTableCellEditorComponent(JTable table, Object value,
                 boolean isSelected, int row, int column) {
-            this.table = table;
             this.row = row;
-            if (isSelected) {
-                button.setForeground(table.getSelectionForeground());
-                button.setBackground(table.getSelectionBackground());
-            } else {
-                button.setForeground(table.getForeground());
-                button.setBackground(table.getBackground());
-            }
+            this.table = table;
             label = (value == null) ? "" : value.toString();
             button.setText(label);
             isPushed = true;
@@ -375,20 +380,11 @@ class UserDatabaseApp extends JFrame {
             JTextField lastNameField = new JTextField(user.lastName);
             JTextField emailField = new JTextField(user.email);
             JTextField phoneNumberField = new JTextField(user.phoneNumber);
-            JButton deleteButton = new JButton("Delete");
-            deleteButton.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    deleteUserInDatabase(user);
-                    ((UserDatabaseApp) table.getTopLevelAncestor()).displayUsers();
-                }
-            });
             Object[] message = {
                 "First Name:", firstNameField,
                 "Last Name:", lastNameField,
                 "Email:", emailField,
-                "Phone Number:", phoneNumberField,
-                deleteButton
-            };
+                "Phone Number:", phoneNumberField,};
 
             int option = JOptionPane.showConfirmDialog(null, message, "Update User", JOptionPane.OK_CANCEL_OPTION);
             if (option == JOptionPane.OK_OPTION) {
@@ -407,6 +403,12 @@ class UserDatabaseApp extends JFrame {
             } catch (SQLException e) {
                 System.out.println("User data deletion failed with error: " + e.getMessage());
             }
+        }
+
+        private int showDeleteDialog(User user) {
+            String message = "Are you sure you want to delete the user: " + user.firstName + " " + user.lastName + "?";
+            int option = JOptionPane.showConfirmDialog(null, message, "Confirm Deletion", JOptionPane.YES_NO_OPTION);
+            return option;
         }
 
         private void updateUserInDatabase(User user) {

@@ -7,7 +7,6 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -47,6 +46,7 @@ public class SaskEnergyApp extends JFrame {
     private UserDatabaseApp userDatabaseApp;
 
     public SaskEnergyApp() {
+        setTitle("SaskEnergy Login");
         createUIComponents();
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(300, 200);
@@ -125,6 +125,7 @@ class UserDatabaseApp extends JFrame {
     private DefaultTableModel tableModel;
 
     public UserDatabaseApp() {
+        setTitle("SaskEnergy User Databse");
         createUIComponents();
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(600, 300);
@@ -137,15 +138,13 @@ class UserDatabaseApp extends JFrame {
         topPanel.setBorder(BorderFactory.createTitledBorder("Search"));
         JPanel bottomPanel = new JPanel();
         JButton newUserButton = new JButton("Add New User");
-        newUserButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                User newUser = showNewUserDialog();
-                if (newUser != null) {
-                    // Add the new user to the database
-                    addUserToDatabase(newUser);
-                    // Refresh the table
-                    displayUsers();
-                }
+        newUserButton.addActionListener((ActionEvent e) -> {
+            User newUser = showNewUserDialog();
+            if (newUser != null) {
+                // Add the new user to the database
+                addUserToDatabase(newUser);
+                // Refresh the table
+                displayUsers();
             }
         });
         bottomPanel.add(newUserButton);
@@ -204,7 +203,7 @@ class UserDatabaseApp extends JFrame {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/users", "root", "Abcd1234");
-        } catch (Exception e) {
+        } catch (ClassNotFoundException | SQLException e) {
             System.out.println("DB connection failed with error: " + e.getMessage());
         }
     }
@@ -223,6 +222,8 @@ class UserDatabaseApp extends JFrame {
             }
         } catch (SQLException e) {
             System.out.println("Fetching user list from DB failed with error: " + e.getMessage());
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println("No more users to display.");
         }
     }
 
@@ -279,6 +280,7 @@ class UserDatabaseApp extends JFrame {
             setOpaque(true);
         }
 
+        @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {
             setText((value == null) ? "" : value.toString());
@@ -290,80 +292,65 @@ class UserDatabaseApp extends JFrame {
 
         protected JButton button;
         private String label;
-        private boolean isPushed;
         private int row;
-        private JTable table;
-        private UserDatabaseApp app;
+        private final UserDatabaseApp app;
 
         public ButtonEditor(JCheckBox checkBox, UserDatabaseApp app, String action) {
             super(checkBox);
             this.app = app;
             button = new JButton();
             button.setOpaque(true);
-            button.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if ("Update".equals(action)) {
-                        // Open a dialog to edit the row data
-                        User user = getUserFromRow(row);
-                        User updatedUser = showUpdateDialog(user);
-                        if (updatedUser != null) {
-                            // Update the user in the database
-                            updateUserInDatabase(updatedUser);
-                            // Refresh the table
-                            app.displayUsers();
-                        }
-                    } else if ("Delete".equals(action)) {
-                        // Open a dialog to confirm and delete the row data
-                        User user = getUserFromRow(row);
-                        int option = showDeleteDialog(user);
-                        if (option == JOptionPane.YES_OPTION) {
-                            // Delete the user from the database
-                            deleteUserInDatabase(user);
-                            // Refresh the table
-                            app.displayUsers();
-                        }
-                    }
-                    fireEditingStopped();
-                }
-            });
-        }
-
-        public Component getTableCellEditorComponent(JTable table, Object value,
-                boolean isSelected, int row, int column) {
-            this.row = row;
-            this.table = table;
-            label = (value == null) ? "" : value.toString();
-            button.setText(label);
-            isPushed = true;
-            return button;
-        }
-
-        public Object getCellEditorValue() {
-            if (isPushed) {
-                // The button has been clicked
-                if ("Update/Delete".equals(label)) {
-                    // The "Update/Delete" button was clicked
+            button.addActionListener((ActionEvent e) -> {
+                if ("Update".equals(action)) {
+                    // Open a dialog to edit the row data
                     User user = getUserFromRow(row);
                     User updatedUser = showUpdateDialog(user);
                     if (updatedUser != null) {
-                        // The user made changes in the dialog
+                        // Update the user in the database
                         updateUserInDatabase(updatedUser);
                         // Refresh the table
-                        ((UserDatabaseApp) table.getTopLevelAncestor()).displayUsers();
+                        app.displayUsers();
+                    }
+                } else if ("Delete".equals(action)) {
+                    // Open a dialog to confirm and delete the row data
+                    User user = getUserFromRow(row);
+                    int option = showDeleteDialog(user);
+                    if (option == JOptionPane.YES_OPTION) {
+                        // Delete the user from the database
+                        deleteUserInDatabase(user);
+                        app.displayUsers();
+                        // Refresh the table
+
                     }
                 }
-            }
-            isPushed = false;
+                fireEditingStopped();
+            });
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value,
+                boolean isSelected, int row, int column) {
+            this.row = row;
+            label = (value == null) ? "" : value.toString();
+            button.setText(label);
+            return button;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
             return label;  // return the label of the button that was clicked
         }
 
+        @Override
         public boolean stopCellEditing() {
-            isPushed = false;
             return super.stopCellEditing();
         }
 
+        @Override
         protected void fireEditingStopped() {
-            super.fireEditingStopped();
+            if (row >= 0 && row < tableModel.getRowCount()) {
+                super.fireEditingStopped();
+            }
         }
 
         private User getUserFromRow(int row) {

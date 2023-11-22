@@ -4,4 +4,6 @@
 # But not these files...
 !.gitignore
 !pom.xml
-!src/*.java
+!src/**/*.java
+
+

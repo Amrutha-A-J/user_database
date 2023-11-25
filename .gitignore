@@ -4,6 +4,9 @@
 # But not these files...
 !.gitignore
 !pom.xml
-!src/**/*.java
+!src\main\java\com\mycompany\saskenergyapp\SaskEnergyApp.java
+!src\main\java\com\mycompany\saskenergyapp\User.java
+!src\main\java\com\mycompany\saskenergyapp\UserDatabaseApp.java
+
 
 

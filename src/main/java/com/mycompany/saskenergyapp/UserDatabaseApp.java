@@ -97,24 +97,33 @@ public class UserDatabaseApp extends JFrame {
                 displayUsers();
             }
         });
+        TableColumn emailColumn = userTable.getColumn("Email");
+        TableColumn phoneColumn = userTable.getColumn("Phone Number");
+
         emailCheckBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.DESELECTED) {
                 userTable.removeColumn(userTable.getColumn("Email"));
             } else {
-                userTable.addColumn(new TableColumn(1));
-                userTable.moveColumn(userTable.getColumnCount() - 1, 1);
-                userTable.getColumnModel().getColumn(1).setHeaderValue("Email");
+                // if phone colum is present, add email back before that. Else, add it before the index of the update button
+                int insertIndex = phoneCheckBox.isSelected()
+                        ? userTable.getColumnModel().getColumnIndex("Phone Number")
+                        : userTable.getColumnModel().getColumnIndex("Update");
+                userTable.addColumn(emailColumn);
+                userTable.moveColumn(userTable.getColumnCount() - 1, insertIndex);
             }
         });
+
         phoneCheckBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.DESELECTED) {
                 userTable.removeColumn(userTable.getColumn("Phone Number"));
             } else {
-                userTable.addColumn(new TableColumn(2));
-                userTable.moveColumn(userTable.getColumnCount() - 1, 2);
-                userTable.getColumnModel().getColumn(2).setHeaderValue("Phone Number");
+                // always readd phone column right before the index of update button
+                int updateIndex = userTable.getColumnModel().getColumnIndex("Update");
+                userTable.addColumn(phoneColumn);
+                userTable.moveColumn(userTable.getColumnCount() - 1, updateIndex);
             }
         });
+
     }
 
     private void connectToDatabase() {

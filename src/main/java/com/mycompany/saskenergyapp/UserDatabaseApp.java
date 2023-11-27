@@ -129,7 +129,9 @@ public class UserDatabaseApp extends JFrame {
     private void connectToDatabase() {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/users", "root", "Abcd1234");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/" + System.getenv("DB_NAME"),
+                    System.getenv("DB_USER"),
+                    System.getenv("DB_PASSWORD"));
         } catch (ClassNotFoundException | SQLException e) {
             System.out.println("DB connection failed with error: " + e.getMessage());
         }
@@ -169,14 +171,18 @@ public class UserDatabaseApp extends JFrame {
                 "Phone Number:", phoneNumberField
             };
 
-            int option = JOptionPane.showConfirmDialog(null, message, "New User", JOptionPane.OK_CANCEL_OPTION);
+            int option = JOptionPane.showConfirmDialog(null, message, "New User",
+                    JOptionPane.OK_CANCEL_OPTION);
             if (option == JOptionPane.OK_OPTION) {
                 String firstName = firstNameField.getText();
                 String lastName = lastNameField.getText();
                 String email = emailField.getText();
                 String phone = phoneNumberField.getText();
 
-                if ("".equals(firstName) || "".equals(lastName) || "".equals(email) || "".equals(phone)) {
+                if ("".equals(firstName)
+                        || "".equals(lastName)
+                        || "".equals(email)
+                        || "".equals(phone)) {
                     JOptionPane.showMessageDialog(null, "User data missing, enter complete user details!");
                 } else {
                     newUser = new User(firstName, lastName, email, phone);
@@ -291,9 +297,14 @@ public class UserDatabaseApp extends JFrame {
                 "Email:", emailField,
                 "Phone Number:", phoneNumberField,};
 
-            int option = JOptionPane.showConfirmDialog(null, message, "Update User", JOptionPane.OK_CANCEL_OPTION);
+            int option = JOptionPane.showConfirmDialog(null,
+                    message, "Update User",
+                    JOptionPane.OK_CANCEL_OPTION);
             if (option == JOptionPane.OK_OPTION) {
-                return new User(user.id, firstNameField.getText(), lastNameField.getText(), emailField.getText(), phoneNumberField.getText());
+                return new User(user.id, firstNameField.getText(),
+                        lastNameField.getText(),
+                        emailField.getText(),
+                        phoneNumberField.getText());
             } else {
                 return null;
             }
@@ -313,7 +324,8 @@ public class UserDatabaseApp extends JFrame {
 
         private int showDeleteDialog(User user) {
             String message = "Are you sure you want to delete the user: " + user.firstName + " " + user.lastName + "?";
-            int option = JOptionPane.showConfirmDialog(null, message, "Confirm Deletion", JOptionPane.YES_NO_OPTION);
+            int option = JOptionPane.showConfirmDialog(null, message,
+                    "Confirm Deletion", JOptionPane.YES_NO_OPTION);
             return option;
         }
 

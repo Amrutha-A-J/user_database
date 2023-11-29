@@ -8,33 +8,33 @@ package com.mycompany.saskenergyapp;
  *
  * @author amrut
  */
-public class User {
-
+public class User extends Person {
     int id;
-    String firstName;
-    String lastName;
     String email;
     String phoneNumber;
 
     // Constructor for existing users (with id)
     User(int id, String firstName, String lastName, String email, String phoneNumber) {
+        super(firstName, lastName);
         this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
         this.email = email;
         this.phoneNumber = phoneNumber;
     }
 
     // Constructor for new users (without id)
     User(String firstName, String lastName, String email, String phoneNumber) {
-        this.firstName = firstName;
-        this.lastName = lastName;
+        super(firstName, lastName);
         this.email = email;
         this.phoneNumber = phoneNumber;
     }
 
     @Override
+    public String getContactInfo() {
+        return "Email: " + email + ", Phone Number: " + phoneNumber;
+    }
+
+    @Override
     public String toString() {
-        return "ID: " + id + ", First Name: " + firstName + ", Last Name: " + lastName + ", Email: " + email + ", Phone Number: " + phoneNumber;
+        return "ID: " + id + ", First Name: " + firstName + ", Last Name: " + lastName + ", " + getContactInfo();
     }
 }

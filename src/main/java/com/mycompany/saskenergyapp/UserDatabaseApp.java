@@ -26,6 +26,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
@@ -138,23 +139,30 @@ public class UserDatabaseApp extends JFrame {
     }
 
     private void displayUsers() {
-        String search = searchField.getText();
-        tableModel.setRowCount(0);
-        try {
-            String query = "SELECT * FROM Users WHERE FirstName LIKE ? OR LastName LIKE ? OR PhoneNumber LIKE ?";
-            PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setString(1, "%" + search + "%");
-            stmt.setString(2, "%" + search + "%");
-            stmt.setString(3, "%" + search + "%");
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                tableModel.addRow(new Object[]{rs.getInt("ID"), rs.getString("FirstName"), rs.getString("LastName"), rs.getString("Email"), rs.getString("PhoneNumber"), "Update", "Delete"});
+        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() {
+                String search = searchField.getText();
+                tableModel.setRowCount(0);
+                try {
+                    String query = "SELECT * FROM Users WHERE FirstName LIKE ? OR LastName LIKE ? OR PhoneNumber LIKE ?";
+                    PreparedStatement stmt = conn.prepareStatement(query);
+                    stmt.setString(1, "%" + search + "%");
+                    stmt.setString(2, "%" + search + "%");
+                    stmt.setString(3, "%" + search + "%");
+                    ResultSet rs = stmt.executeQuery();
+                    while (rs.next()) {
+                        tableModel.addRow(new Object[]{rs.getInt("ID"), rs.getString("FirstName"), rs.getString("LastName"), rs.getString("Email"), rs.getString("PhoneNumber"), "Update", "Delete"});
+                    }
+                } catch (SQLException e) {
+                    System.out.println("Fetching user list from DB failed with error: " + e.getMessage());
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.out.println("No more users to display.");
+                }
+                return null;
             }
-        } catch (SQLException e) {
-            System.out.println("Fetching user list from DB failed with error: " + e.getMessage());
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("No more users to display.");
-        }
+        };
+        worker.execute();
     }
 
     private User showNewUserDialog() {
